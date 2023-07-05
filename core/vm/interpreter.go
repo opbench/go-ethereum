@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"time"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -226,12 +227,16 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			in.evm.Config.Tracer.CaptureState(pc, op, gasCopy, cost, callContext, in.returnData, in.evm.depth, err)
 			logged = true
 		}
+		//line 231
+		start := time.Now() // add start time 
 		// execute the operation
 		res, err = operation.execute(&pc, in, callContext)
 		if err != nil {
 			break
 		}
+		log.Error("EVM processing time", "pc", pc, "opCode", op, "elapsed", common.PrettyDuration(time.Since(start))) // calculate duration
 		pc++
+
 	}
 
 	if err == errStopToken {
