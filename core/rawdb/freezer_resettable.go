@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const tmpSuffix = ".tmp"
@@ -170,7 +171,8 @@ func (f *ResettableFreezer) ModifyAncients(fn func(ethdb.AncientWriteOp) error) 
 }
 
 // TruncateHead discards any recent data above the provided threshold number.
-func (f *ResettableFreezer) TruncateHead(items uint64) error {
+// It returns the previous head number.
+func (f *ResettableFreezer) TruncateHead(items uint64) (uint64, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 
@@ -178,7 +180,8 @@ func (f *ResettableFreezer) TruncateHead(items uint64) error {
 }
 
 // TruncateTail discards any recent data below the provided threshold number.
-func (f *ResettableFreezer) TruncateTail(tail uint64) error {
+// It returns the previous value
+func (f *ResettableFreezer) TruncateTail(tail uint64) (uint64, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 
@@ -222,6 +225,7 @@ func cleanup(path string) error {
 	}
 	for _, name := range names {
 		if name == filepath.Base(path)+tmpSuffix {
+			log.Info("Removed leftover freezer directory", "name", name)
 			return os.RemoveAll(filepath.Join(parent, name))
 		}
 	}
